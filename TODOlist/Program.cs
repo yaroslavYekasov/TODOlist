@@ -1,10 +1,10 @@
+// Program.cs
 using Microsoft.EntityFrameworkCore;
 using TODOlist.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 
 // Configure Swagger/OpenAPI
@@ -19,7 +19,7 @@ builder.Services.AddDbContext<AuthContext>(options =>
     )
 );
 
-// **Add CORS Policy**
+// Add CORS Policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -27,7 +27,18 @@ builder.Services.AddCors(options =>
             .WithOrigins("http://localhost:3000") // Frontend URL
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .AllowCredentials()
     );
+});
+
+// Add Session Middleware
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(1);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
 var app = builder.Build();
@@ -39,12 +50,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// **Use the CORS policy**
+// Use the CORS policy
 app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapControllers();
 
