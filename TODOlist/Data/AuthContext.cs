@@ -39,6 +39,7 @@ namespace TODOlist.Data
         public int Id { get; set; }
 
         [Required]
+        [DataType(DataType.Date)]
         public DateTime Date { get; set; }
 
         [Required]
@@ -56,7 +57,6 @@ namespace TODOlist.Data
         public int UserId { get; set; }
 
         // Navigation property
-        [ForeignKey("UserId")]
         public User User { get; set; }
     }
 }

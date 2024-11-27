@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TODOlist.Data;
 
-public class TaskItemDto
+public class TaskItemCreateDto
 {
     [Required]
+    [DataType(DataType.Date)]
     public DateTime Date { get; set; }
 
     [Required]

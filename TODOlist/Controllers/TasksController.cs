@@ -1,5 +1,4 @@
-﻿// Controllers/TasksController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TODOlist.Data;
 using Microsoft.AspNetCore.Http;
@@ -30,13 +29,15 @@ namespace TODOlist.Controllers
 
             var tasks = await _context.Tasks
                 .Where(t => t.UserId == userId.Value)
+                .OrderByDescending(t => t.Date)
                 .ToListAsync();
 
             return tasks;
         }
 
+        // POST: api/Tasks
         [HttpPost]
-        public async Task<ActionResult<TaskItem>> PostTaskItem([FromBody] TaskItemDto taskItemDto)
+        public async Task<ActionResult<TaskItem>> PostTaskItem([FromBody] TaskItemCreateDto taskItemDto)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
 
@@ -65,7 +66,6 @@ namespace TODOlist.Controllers
             return CreatedAtAction(nameof(GetTaskItem), new { id = taskItem.Id }, taskItem);
         }
 
-
         // GET: api/Tasks/5
         [HttpGet("{id}")]
         public async Task<ActionResult<TaskItem>> GetTaskItem(int id)
@@ -77,56 +77,14 @@ namespace TODOlist.Controllers
                 return Unauthorized("User is not logged in.");
             }
 
-            var taskItem = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId.Value);
+            var taskItem = await _context.Tasks.FindAsync(id);
 
-            if (taskItem == null)
+            if (taskItem == null || taskItem.UserId != userId.Value)
             {
                 return NotFound();
             }
 
             return taskItem;
-        }
-
-        // PUT: api/Tasks/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutTaskItem(int id, TaskItem taskItem)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-
-            if (userId == null)
-            {
-                return Unauthorized("User is not logged in.");
-            }
-
-            if (id != taskItem.Id)
-            {
-                return BadRequest();
-            }
-
-            if (taskItem.UserId != userId.Value)
-            {
-                return Unauthorized("You cannot modify this task.");
-            }
-
-            _context.Entry(taskItem).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TaskItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         // DELETE: api/Tasks/5
@@ -140,9 +98,9 @@ namespace TODOlist.Controllers
                 return Unauthorized("User is not logged in.");
             }
 
-            var taskItem = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId.Value);
+            var taskItem = await _context.Tasks.FindAsync(id);
 
-            if (taskItem == null)
+            if (taskItem == null || taskItem.UserId != userId.Value)
             {
                 return NotFound();
             }
@@ -151,11 +109,6 @@ namespace TODOlist.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool TaskItemExists(int id)
-        {
-            return _context.Tasks.Any(e => e.Id == id);
         }
     }
 }
