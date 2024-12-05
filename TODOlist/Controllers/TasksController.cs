@@ -110,5 +110,35 @@ namespace TODOlist.Controllers
 
             return NoContent();
         }
+
+        // PUT: api/Tasks/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutTaskItem(int id, [FromBody] TaskItemUpdateDto taskItemDto)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return Unauthorized("User is not logged in.");
+            }
+
+            var taskItem = await _context.Tasks.FindAsync(id);
+
+            if (taskItem == null || taskItem.UserId != userId.Value)
+            {
+                return NotFound();
+            }
+
+            // Update task item with the new values from the DTO
+            taskItem.Date = taskItemDto.Date;
+            taskItem.Subject = taskItemDto.Subject;
+            taskItem.Title = taskItemDto.Title;
+            taskItem.Description = taskItemDto.Description;
+
+            _context.Entry(taskItem).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return NoContent();  // No content as the task was successfully updated
+        }
     }
 }

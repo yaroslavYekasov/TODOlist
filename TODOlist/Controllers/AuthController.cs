@@ -1,5 +1,4 @@
-﻿// Controllers/AuthController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TODOlist.Data;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +16,7 @@ namespace TODOlist.Controllers
             _context = context;
         }
 
-        // Controllers/AuthController.cs
+        // POST: api/Auth/register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
         {
@@ -44,8 +43,7 @@ namespace TODOlist.Controllers
             return Ok(new { message = "User registered successfully!", userId = user.Id });
         }
 
-
-        // Controllers/AuthController.cs
+        // POST: api/Auth/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto loginDto)
         {
@@ -65,7 +63,69 @@ namespace TODOlist.Controllers
             return Ok(new { message = "Login successful!", userId = user.Id });
         }
 
+        // GET: api/Auth/checksession
+        [HttpGet("checksession")]
+        public IActionResult CheckSession()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
 
+            if (userId == null)
+            {
+                return Unauthorized("User is not logged in.");
+            }
+
+            var user = _context.Users.FirstOrDefault(u => u.Id == userId.Value);
+
+            if (user == null)
+            {
+                return Unauthorized("User not found.");
+            }
+
+            return Ok(new { username = user.Email });
+        }
+
+        // PUT: api/Auth/updateUserInfo
+        [HttpPut("updateUserInfo")]
+        public async Task<IActionResult> UpdateUserInfo([FromBody] UpdateUserInfoDto updateDto)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return Unauthorized("User is not logged in.");
+            }
+
+            var user = await _context.Users.FindAsync(userId.Value);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Check if the provided current password is correct
+            if (!BCrypt.Net.BCrypt.Verify(updateDto.Password, user.Password))
+            {
+                return BadRequest("Current password is incorrect.");
+            }
+
+            // Update email if provided
+            if (!string.IsNullOrEmpty(updateDto.Email))
+            {
+                user.Email = updateDto.Email;
+            }
+
+            // Update password if provided
+            if (!string.IsNullOrEmpty(updateDto.NewPassword))
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(updateDto.NewPassword);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User info updated successfully!" });
+        }
+
+        // POST: api/Auth/logout
         [HttpPost("logout")]
         public IActionResult Logout()
         {

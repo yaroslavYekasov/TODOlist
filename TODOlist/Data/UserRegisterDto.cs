@@ -1,5 +1,4 @@
-﻿// TODOlist.Data/UserRegisterDto.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TODOlist.Data
 {
