@@ -11,8 +11,8 @@ using TODOlist.Data;
 namespace TODOlist.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20241205095652_AddRoleToUser")]
-    partial class AddRoleToUser
+    [Migration("20241205111410_CreateAdminUser")]
+    partial class CreateAdminUser
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -69,6 +69,10 @@ namespace TODOlist.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 

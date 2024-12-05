@@ -43,7 +43,7 @@ namespace TODOlist.Controllers
             return Ok(new { message = "User registered successfully!", userId = user.Id });
         }
 
-        // POST: api/Auth/login
+        // Controllers/AuthController.cs
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto loginDto)
         {
@@ -54,14 +54,33 @@ namespace TODOlist.Controllers
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
+            // Check if user exists and password matches
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password))
-                return Unauthorized("Invalid email or password.");
+            {
+                // Check for admin credentials (admin@gmail.com with password 'admin')
+                if (loginDto.Email == "admin@gmail.com" && loginDto.Password == "admin")
+                {
+                    // Simulate admin login (no need to hash password for admin)
+                    user = new User
+                    {
+                        Email = "admin@gmail.com",
+                        Password = "admin", // Admin password
+                        Role = "admin" // Set role as admin
+                    };
+                }
+                else
+                {
+                    return Unauthorized("Invalid email or password.");
+                }
+            }
 
-            // Set session
+            // Set session with role
             HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("UserRole", user.Role);
 
-            return Ok(new { message = "Login successful!", userId = user.Id });
+            return Ok(new { message = "Login successful!", userId = user.Id, role = user.Role });
         }
+
 
         // GET: api/Auth/checksession
         [HttpGet("checksession")]

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BCrypt.Net;
 
 namespace TODOlist.Data
 {
@@ -9,7 +10,7 @@ namespace TODOlist.Data
         public AuthContext(DbContextOptions<AuthContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<TaskItem> Tasks { get; set; } // Ensure this is included
+        public DbSet<TaskItem> Tasks { get; set; }
     }
 
     public class User
@@ -30,7 +31,11 @@ namespace TODOlist.Data
         [MaxLength(255)]
         public string Password { get; set; }
 
-        // Navigation property
+        // Add Role property to differentiate between users and admins
+        [Required]
+        public string Role { get; set; } = "user"; // Default is "user"
+
+        // Navigation property for tasks
         public ICollection<TaskItem> Tasks { get; set; }
     }
 
